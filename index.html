@@ -20,14 +20,22 @@
       }
 
       /* NO scroll-snap — plain vertical scroll works on all devices */
-      html,
-      body {
+      html {
           background: #000;
           color: #fff;
           font-family: 'Inter', 'Helvetica Neue', Helvetica, sans-serif;
-          overflow-x: clip;
-          -webkit-overflow-scrolling: touch;
           -webkit-text-size-adjust: 100%;
+          /* crucial for modern iOS Safari bottom bar logic: */
+          height: -webkit-fill-available;
+      }
+      body {
+          background: #000;
+          min-height: 100vh;
+          min-height: -webkit-fill-available;
+          overflow-x: hidden;
+          /* hardware acceleration for scroll */
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-y: none;
       }
 
       /* Fixed star canvas */
@@ -46,13 +54,17 @@
           position: relative;
           z-index: 10;
           width: 100%;
-          min-height: 100dvh;
+          min-height: 100vh;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           padding: 80px 20px 60px;
           overflow: hidden;
+          /* force hardware acceleration to reduce iOS layout thrashing */
+          -webkit-transform: translateZ(0);
+          transform: translateZ(0);
+          will-change: transform;
       }
 
       /* ── REVEAL (JS adds .in) ── */
@@ -1731,7 +1743,12 @@
           cv.height = window.innerHeight;
         }
         resize();
-        window.addEventListener("resize", resize);
+        window.addEventListener("orientationchange", function() {
+          setTimeout(resize, 100);
+        });
+        window.addEventListener("resize", function() {
+          if (window.innerWidth !== cv.width) resize();
+        });
         var stars = [];
         for (var i = 0; i < 380; i++) {
           stars.push({
@@ -1930,7 +1947,12 @@
           nc.fillRect(0, 0, nb.width, nb.height);
         }
         rsz();
-        window.addEventListener("resize", rsz);
+        window.addEventListener("orientationchange", function() {
+          setTimeout(rsz, 100);
+        });
+        window.addEventListener("resize", function() {
+          if (window.innerWidth !== nb.width) rsz();
+        });
       })();
     </script>
   </body>
